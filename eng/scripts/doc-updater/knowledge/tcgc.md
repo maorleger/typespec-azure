@@ -56,6 +56,7 @@
 
 - `@clientApiVersions` had incorrect @param description for `value` (was copy-pasted from @apiVersion). Fixed.
 - `@paramAlias` example comment was confusing about what gets elevated. Fixed.
+- `@operationGroup` (deprecated) doc comment: the `@deprecated` JSDoc tag was replaced with a plain `Deprecated: use @client instead` prose line (2026-08) so the deprecation note renders in the generated reference docs. If regenerating, the decorators.md reference reflects this as a "Deprecated:" sentence rather than a JSDoc `@deprecated` banner.
 
 ## Documentation File Map
 
@@ -123,6 +124,7 @@ namespace (@clientNamespace), naming (@clientName), overload, structure (@client
 - `legacy-hierarchy-building-conflict` (warning): Now only has `property-type-mismatch` message ID (the old `property-missing` and `type-mismatch` message IDs were removed). Emitted during property reconciliation when a dropped property's type is incompatible with the same-named property on the new base chain.
 - `override-parameters-mismatch` (error): In addition to the general "different parameters definition" case, `@override` now reports this when the override operation drops a parameter that is realized as a `@path` parameter in the original operation's HTTP route, or redeclares it without `@path` (the underlying route still needs it). The check is skipped when any override parameter carries `@clientLocation` (intentional relocation). Matching between original/override parameters is by **name**, not position (so overrides may add/remove/regroup parameters). "Realized path parameter" is resolved from `getHttpOperation(...).parameters` (route ground truth), not from the `@path` decorator alone, because templated params (e.g. ARM scope models) can carry `@path` without appearing in the route. Documented in 04method.mdx `@override` section as a `:::caution`.
 - `client-location-conflict` / `parameterTypeConflict` (warning): `@clientLocation` cannot move multiple parameters that share a name but have different types to the same client. Common when `@clientLocation` is on a templated parameter instantiated with different types across operations; the client parameter collapses to a single (last) type, breaking the SDK. Fix: move the parameter on each operation instead. Validated in `src/validations/types.ts` (`validateClientLocationParameterTypes`). Documented in 04method.mdx `@clientLocation` section as a `:::caution`.
+- `client-default-value-type-mismatch` (warning, added 2026-08): Emitted from `$clientDefaultValue`'s `onTargetFinish` callback when the JS type of the value passed to `@clientDefaultValue` doesn't match the property/parameter type. Uses `tk.literal.create(value)` + `tk.type.isAssignableTo` against the property type (or the `@alternateType` type when present). `valueType` label is `"numeric"` for numbers, otherwise the JS `typeof` (`"string"`, `"boolean"`). Numeric subtypes (float32, int64) accept any numeric default. Suppressible; mismatched default still applied when suppressed. Documented in 08types.mdx `@clientDefaultValue` section ("Value type must match the property type").
 
 ## External Type Usage Propagation
 
@@ -134,6 +136,14 @@ namespace (@clientNamespace), naming (@clientName), overload, structure (@client
 
 - The `encode` property on `SdkBuiltInType` is not only set by the `@encode` decorator. TCGC also sets it contextually — for example, `bytes` in a `multipart/form-data` part get `encode: "bytes"` (raw binary) instead of the default `"base64"`. This is handled in `addMultipartPropertiesToModelType` in `src/types.ts`, which calls `addEncodeInfo` with the part's default content type.
 - The guideline.md description of `SdkBuiltInType.encode` was updated to reflect this contextual encoding behavior.
+- `wireType?: SdkBuiltInType` (added 2026-08 in interfaces.ts): set on `SdkBuiltInType` when `@encode` specifies an `encodedAs` type. `addEncodeInfo` in `src/types.ts` now handles `string` and `url` kinds in addition to int/boolean, so encodings like `string` encoded-as `int32` or `int32` encoded-as `string` are supported. When an explicit encoding name is present, `encode` keeps that name; otherwise `encode` is set to the wire type's kind. `name`/`kind` stay the client-facing type. Documented in guideline.md under Built-in Types.
+
+## C# Linter Rules (added 2026-08)
+
+- `csharp-model-suffix`: C# model names should use recommended suffixes — `Config` (not `Options`, except client options), `Content` (not `Request`), `Result` (not `Response`). Checks the C#-resolved name, respects `@clientName`. In `best-practices:csharp` ruleset.
+- `csharp-use-standard-acronyms`: C# names should use standard acronym casing — currently `IP`, `DB`, `OS` (e.g., `IPAddress` not `IpAddress`, `CosmosDB` not `CosmosDb`). Respects `@clientName`. In `best-practices:csharp` ruleset.
+- Both are registered in `src/linter.ts` (in `rules` and `csharpRules`). Their `.md` help files live next to the rule `.ts` files. The linter reference doc (`reference/linter.md`) and per-rule pages are auto-generated by `pnpm regen-docs`; do not hand-edit.
+- Existing sibling C# rule: `csharp-no-url-suffix`.
 
 ## Common Mistakes to Avoid
 
