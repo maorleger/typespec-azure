@@ -124,3 +124,21 @@ The library provides an experimental **Agent** base type in `lib/base-types/agen
 - How-to guide added: `website/src/content/docs/docs/howtos/ARM/agent-base-type.mdx`.
 - The ARM howtos sidebar is auto-generated from the directory (`current-sidebar.ts` → `autogenerate` on `howtos`), so new how-to files need no manual sidebar registration.
 - Reference docs (`reference/*.md`) for these lib additions were already regenerated in-commit; no `regen-docs` diff was needed for this batch.
+
+## Relationship Base Type (Experimental)
+
+The library provides an experimental **Relationship** base type in `lib/base-types/relationship.tsp` (namespace `Azure.ResourceManager.BaseTypes.Relationships`):
+
+- `Relationship<Properties>` is an `ExtensionResource` template that applies `@azureBaseType(#{ baseType: BaseType.Relationship, version: ... })` automatically. Relationship resources must therefore be extension resources.
+- `RelationshipProperties<ProvisioningState>` is the required property bag: `baseTypes` (read-only), `sourceId`, `sourceTenant`, `targetId`, `targetTenant`, and `provisioningState` (read-only). RP-specific property bags must `is RelationshipProperties<...>`.
+- Linting rule `use-relationship-required-properties` fires when a Relationship resource is not an extension resource or its properties bag is missing any of `sourceId`, `sourceTenant`, `targetId`, `targetTenant`, `provisioningState`.
+- Applying the base type outside `Azure.ResourceManager` emits the `basetypes-experimental` warning, so user specs must `#suppress "...basetypes-experimental" "..."`.
+- Canonical sample: `packages/samples/specs/resource-manager/resource-types/relationship/main.tsp`.
+
+## Rule Doc Stubs
+
+Newly-added rule docs under `website/.../rules/` may land as stubs containing only frontmatter + the description line (as `use-relationship-required-properties.md` did). Flesh these out to match the standard rule-doc structure used by peers: `## Impact` (with `- **Area:** ...`), `## ❌ Incorrect`, `## ✅ Correct`, and `## Suppression` sections.
+
+## Maintaining the arm-rules.md How-To Table
+
+`website/src/content/docs/docs/howtos/ARM/arm-rules.md` has a hand-maintained impact table under `### Rules in @azure-tools/typespec-azure-resource-manager`, listed alphabetically by rule name. It is NOT auto-generated, so newly-registered rules must be added manually (each row links to the `rules/<name>/` reference page and gives an `**Area.**` impact note). The `arm-agent-base-type-*` and `use-relationship-required-properties` rules were added here.
