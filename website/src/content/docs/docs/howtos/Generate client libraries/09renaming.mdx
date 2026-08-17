@@ -292,6 +292,42 @@ func (client *PetStoreNamespaceClient) Read(ctx context.Context, name string, op
 
 </ClientTabs>
 
+#### Handling reserved-word operations (TypeScript)
+
+In the TypeScript emitter, operations whose TypeSpec name is a JavaScript reserved word (e.g. `delete`) are automatically renamed to avoid conflicts. When the operation belongs to an **operation group**, the emitter suffixes the **singularized** operation group name:
+
+```tsp
+@route("/conversations")
+interface Conversations {
+  @delete
+  delete(@path conversationName: string): void;
+}
+```
+
+Generated TypeScript (data-plane):
+
+```typescript
+export interface ConversationsOperations {
+  // Renamed from `delete` to `deleteConversation` (singularized group name)
+  deleteConversation: (conversationName: string, options?: ConversationsDeleteOptionalParams) => Promise<void>;
+}
+```
+
+If the operation has **no operation group**, it falls back to a `$`-prefixed internal name with a `@fixme` doc comment guiding you to add a `@clientName` override.
+
+**Management-plane** services are not affected — `delete` is emitted as-is, matching long-standing HLC behavior.
+
+**Escape hatch via `@clientName`**: If a library already shipped with the guarded `delete` name and you need to preserve it, apply `@clientName` explicitly. The emitter then honors that name and skips the automatic rename:
+
+```tsp
+@route("/conversations")
+interface Conversations {
+  @delete
+  @clientName("delete", "javascript")
+  delete(@path conversationName: string): void;
+}
+```
+
 #### Renaming operation parameters
 
 Operation parameters can be renamed using the `@clientName` decorator applied from the `client.tsp` file using the `@@` augment syntax. This is useful when you want different parameter names in the generated client SDK while keeping the wire name unchanged.
