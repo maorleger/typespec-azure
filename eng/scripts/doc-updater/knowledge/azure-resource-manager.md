@@ -124,3 +124,8 @@ The library provides an experimental **Agent** base type in `lib/base-types/agen
 - How-to guide added: `website/src/content/docs/docs/howtos/ARM/agent-base-type.mdx`.
 - The ARM howtos sidebar is auto-generated from the directory (`current-sidebar.ts` → `autogenerate` on `howtos`), so new how-to files need no manual sidebar registration.
 - Reference docs (`reference/*.md`) for these lib additions were already regenerated in-commit; no `regen-docs` diff was needed for this batch.
+- **Agent base type version is now `2026-04-01`** (bumped from the earlier `2024-06-01`). The version string appears in the `@azureBaseType(#{ baseType: ..., version: "2026-04-01" })` calls in `agent.tsp`, `relationship.tsp`, and the `base-types.tsp` doc-comment example. When docs show a direct `@azureBaseType` example (e.g. the "Applying `@azureBaseType` directly" section of `agent-base-type.mdx`), keep the `version` in sync with these lib values.
+
+## Rule Docs Moved Into `src/rules/` (colocated)
+
+Rule documentation Markdown now lives next to each rule's TypeScript source as `packages/typespec-azure-resource-manager/src/rules/<rule>.md`, wired via `docs: fileRef.fromPackageRoot("src/rules/<rule>.md")` in the `createRule({...})` call. These `src/rules/*.md` files are NOT in the doc-updater `allowedPaths`, so they cannot be hand-edited by this workflow. The old hand-maintained `website/.../libraries/azure-resource-manager/rules/` directory no longer exists; `reference/linter.md` (auto-generated) is the current index. `regen-docs` uses `tspd doc . --rules-dir ../rules ...` to pull rule docs. Do not recreate the deleted website `rules/` pages.
