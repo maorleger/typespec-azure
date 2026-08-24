@@ -673,6 +673,41 @@ model Config {
 </ClientTabItem>
 </ClientTabs>
 
+### Value Type Validation
+
+The value passed to `@clientDefaultValue` must match the type of the property or parameter it is applied to. When the types do not match (for example, a string default on a numeric property), TCGC reports the `client-default-value-type-mismatch` diagnostic:
+
+```typespec
+model RequestOptions {
+  // ❌ Warning: string default on a numeric property
+  @Azure.ClientGenerator.Core.Legacy.clientDefaultValue("10")
+  pageSize?: int32;
+
+  // ✅ Correct: default type matches the property type
+  @Azure.ClientGenerator.Core.Legacy.clientDefaultValue(10)
+  retryCount?: int32;
+}
+```
+
+When `@alternateType` is applied, the default value is validated against the alternate type instead of the original property type, so a default matching the alternate type is accepted:
+
+```typespec
+// ✅ No warning — the default matches the alternate type
+@Azure.ClientGenerator.Core.Legacy.clientDefaultValue("10")
+@Azure.ClientGenerator.Core.alternateType(string)
+@query
+pageSize?: int32;
+```
+
+If a mismatch is intentional, you can suppress the diagnostic; the mismatched default value is still applied to the generated SDKs:
+
+```typespec
+#suppress "@azure-tools/typespec-client-generator-core/client-default-value-type-mismatch" "intentional mismatch"
+@Azure.ClientGenerator.Core.Legacy.clientDefaultValue("10")
+@query
+pageSize?: int32;
+```
+
 ## Models
 
 ### Models with additional properties of any type
@@ -2101,7 +2136,8 @@ public readonly partial struct ProvisioningState : IEquatable<ProvisioningState>
 ```typescript
 export type ResourceProvisioningState = "Succeeded" | "Failed" | "Canceled";
 // NOTE: extensible enum design may change in JS
-export type ProvisioningState = string | "InProgress" | ResourceProvisioningState;
+export type ProvisioningState =
+  string | "InProgress" | ResourceProvisioningState;
 ```
 
 </ClientTabItem>

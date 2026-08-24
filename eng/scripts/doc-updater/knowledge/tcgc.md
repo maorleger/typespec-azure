@@ -292,3 +292,21 @@ namespace (@clientNamespace), naming (@clientName), overload, structure (@client
 ## Diagnostic Messages Externalized (July 2026)
 
 - Diagnostic message definitions were moved out of `src/lib.ts` into individual `src/diagnostics/<name>.md` files (loaded at build). Purely an authoring refactor; reference docs regenerate the same content. No user-facing doc action.
+
+## New C# Naming Linter Rules (August 2026)
+
+- Two new C#-only rules added in `src/rules/` (registered in `src/linter.ts`, in the `best-practices:csharp` ruleset):
+  - `csharp-model-suffix` — C# model names should use recommended suffixes: `Config` (not `Options`, except client options), `Content` (not `Request`), `Result` (not `Response`). Checks the C#-resolved name and respects `@clientName` overrides.
+  - `csharp-use-standard-acronyms` — C# names should use standard acronym casing. Initial coverage: `IP`, `DB`, `OS` (e.g. `IpAddress`→`IPAddress`, `CosmosDb`→`CosmosDB`).
+- Both ship a `<name>.md` doc and provide codefixes (see `src/rules/codefix-helpers.ts`). `reference/linter.md` already lists both rows at checkout — verify before adding. Linter rules need no Spector coverage and no howto ClientTabs.
+
+## client-default-value-type-mismatch Diagnostic (August 2026)
+
+- New warning diagnostic (`src/diagnostics/client-default-value-type-mismatch.md`, registered via `src/lib.ts`) raised by `@Azure.ClientGenerator.Core.Legacy.clientDefaultValue` when the default value's type does not match the target property/parameter type (e.g. string default on an `int32`).
+- When `@alternateType` is present, the default is validated against the **alternate** type instead of the original — a default matching the alternate type is accepted.
+- Suppressible; the mismatched default is still applied to generated SDKs when suppressed.
+- Documented in howto `08types.mdx` under "Client Default Values (Legacy)" → new "Value Type Validation" subsection (typespec-only examples inside a note, no ClientTabs — it's a diagnostic, not positive wire generation).
+
+## @operationGroup Doc Comment Reformat (August 2026)
+
+- `lib/decorators.tsp` moved the `@operationGroup` `@deprecated`/deprecation note out of the leading line into a standalone "Deprecated: use `@client` instead." paragraph. `reference/decorators.md` already reflects this at checkout (regenerated). No further action — do not hand-edit the generated reference.
