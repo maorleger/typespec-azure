@@ -292,3 +292,21 @@ namespace (@clientNamespace), naming (@clientName), overload, structure (@client
 ## Diagnostic Messages Externalized (July 2026)
 
 - Diagnostic message definitions were moved out of `src/lib.ts` into individual `src/diagnostics/<name>.md` files (loaded at build). Purely an authoring refactor; reference docs regenerate the same content. No user-facing doc action.
+
+## SdkBuiltInType.wireType (August 2026)
+
+- `SdkBuiltInType` gained a `wireType?: SdkBuiltInType` property. It is set when `@encode` specifies an `encodedAs` type (the second/type argument), e.g. `@encode(string)` on an integer, or `@encode("abc", int32)` on a string. `wireType` is the built-in type the value is serialized as on the wire, while `kind` stays the client-facing type.
+- `encode` vs `wireType`: if `@encode` provides an explicit encoding name (like `"string"` name or `"abc"`), `encode` keeps that name; otherwise `encode` falls back to the wire type's `kind`. `wireType` is `undefined` when no `encodedAs` type is given.
+- The set of kinds that support encoding-as-another-type was widened in `addEncodeInfo` (`src/types.ts`) from int/boolean to also include `string` and `url`.
+- Note: array element encoding is independent — `@encode(ArrayEncoding.commaDelimited) value: string[]` leaves the element `valueType.encode` undefined; the delimiter lives on the array property's `encode`.
+- Documented in guideline.md under "Built-in Types". No js-api reference regen needed here (js-api reference is not committed under website/).
+
+## New C# Linter Rules (August 2026)
+
+- Two rules added to `csharpRules` and `all` rulesets: `csharp-model-suffix` (model names should use `Config`/`Content`/`Result` instead of `Options`/`Request`/`Response`; skips `*ClientOptions`; respects `@clientName`) and `csharp-use-standard-acronyms` (standard acronym casing). Both are in the `best-practices:csharp` set.
+- The generated `reference/linter.md` and per-rule pages are produced by `pnpm regen-docs` and were already regenerated at checkout — do not hand-edit them.
+- `codefix-helpers.ts` was generalized from `Model | ModelProperty` to any `Type` (uses `getTypeName` + handles `UnionVariant`), so augment-decorator codefixes now work for more targets.
+
+## client-default-value-type-mismatch Diagnostic (August 2026)
+
+- New warning emitted when the value passed to `@clientDefaultValue` (Legacy namespace) does not match the property type (e.g. string default on an `int32`). When `@alternateType` is present, the value is validated against the alternate type instead. Implemented via an `onTargetFinish` return from `$clientDefaultValue` in `decorators.ts`; doc in `src/diagnostics/client-default-value-type-mismatch.md`. Suppressible; suppressed mismatches still apply the value.
