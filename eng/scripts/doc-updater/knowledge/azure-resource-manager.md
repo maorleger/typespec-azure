@@ -124,3 +124,17 @@ The library provides an experimental **Agent** base type in `lib/base-types/agen
 - How-to guide added: `website/src/content/docs/docs/howtos/ARM/agent-base-type.mdx`.
 - The ARM howtos sidebar is auto-generated from the directory (`current-sidebar.ts` → `autogenerate` on `howtos`), so new how-to files need no manual sidebar registration.
 - Reference docs (`reference/*.md`) for these lib additions were already regenerated in-commit; no `regen-docs` diff was needed for this batch.
+- The canonical Agent base type version is now `"2026-04-01"` (bumped from `"2024-06-01"`). When the library bumps this version, update every website example that hard-codes `@azureBaseType(#{ baseType: ..., version: "..." })` (e.g. `howtos/ARM/agent-base-type.mdx`).
+- The Agent conversation/response item model was renamed `ConversationItem` → `InputItem`, its `content` changed from `string` to `Record<unknown>`, and `ConversationProperties` gained a required `input: InputItem`. These are reference-doc (auto-generated) details; website how-to prose does not reference the item model directly.
+
+## Website `rules/` Directory Is Generated (gitignored)
+
+`website/src/content/docs/docs/libraries/*/rules/` is **gitignored** (see `.gitignore`, `website/src/content/docs/docs/libraries/*/rules/`). Do NOT hand-edit files there — edits are never committed and the directory is regenerated from the per-rule `.md` files under `packages/typespec-azure-resource-manager/src/rules/*.md`. Those `src/rules/*.md` files are the source of truth for rule examples, but they live under `src/` which is outside the doc-updater `allowedPaths`, so rule-example fixes (e.g. a stale Agent `version` in a rule example) are out of scope for this workflow.
+
+## Relationship Base Type (Experimental)
+
+`lib/base-types/relationship.tsp` (namespace `Azure.ResourceManager.BaseTypes.Relationships`) adds a `Relationship<Properties = RelationshipProperties>` template built on `ExtensionResource`, applying `@azureBaseType(#{ baseType: BaseType.Relationship, version: "2026-04-01" })` automatically. `RelationshipProperties<ProvisioningState>` carries `baseTypes` (read-only), `sourceId`, `sourceTenant`, `targetId`, `targetTenant`, and read-only `provisioningState`. Rule `use-relationship-required-properties` enforces the required fields. Sample: `packages/samples/specs/resource-manager/resource-types/relationship/main.tsp`. Reference docs auto-cover it; no dedicated how-to exists yet.
+
+## Billing Data Common Type
+
+`lib/common-types/billing-data.tsp` (`@added(Versions.v6)`) adds `BillingData` plus `BillingSchedule`/`BillingScheduleChange` and the `BillingState`/`BillingStateReason`/`BillingRenewalType`/`BillingScheduleChangeEffectiveType`/`BillingScheduleChangeKind` unions. `lib/models.tsp` exposes the `BillingDataProperty` spread (`billingData: CommonTypes.BillingData`). This is already documented as an envelope add-on in `howtos/ARM/resource-type.mdx` (the "Billing Data" section) and in the common-types sample `resource-common-properties/billing-data/main.tsp`.
