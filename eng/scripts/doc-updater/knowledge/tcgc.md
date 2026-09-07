@@ -292,3 +292,22 @@ namespace (@clientNamespace), naming (@clientName), overload, structure (@client
 ## Diagnostic Messages Externalized (July 2026)
 
 - Diagnostic message definitions were moved out of `src/lib.ts` into individual `src/diagnostics/<name>.md` files (loaded at build). Purely an authoring refactor; reference docs regenerate the same content. No user-facing doc action.
+
+## SdkBuiltInType.wireType — encode as different type (Sep 2026)
+
+- `SdkBuiltInType` gained `wireType?: SdkBuiltInType` (`src/interfaces.ts`). It holds the type the value is serialized as on the wire when `@encode` specifies an `encodedAs` target type (e.g. `@encode("abc", int32)` on a `string`, `@encode(string)` on an `int32`, `@encode(ArrayEncoding.commaDelimited)` bytes). `undefined` when no `encodedAs` target.
+- Logic in `addEncodeInfo` (`src/types.ts`): the range of encodable built-in kinds was widened to also include `string` and `url` (previously only int kinds + boolean). When `encodeData.encoding` is absent, `.encode` is set to the wire type's kind; when present, `.encode` keeps the encoding name and `.wireType` still records the target type. Lets emitters distinguish the client-facing type (outer `SdkBuiltInType`) from what is transmitted.
+- Documented in guideline.md "Built-in Types" bullet. Tests: `test/types/array.test.ts` ("model with array encode and string encode from playground example"), `test/types/built-in.test.ts` (`wireType?.kind` assertions). Emitter type-graph metadata — no Spector spec needed.
+
+## client-default-value-type-mismatch diagnostic (Sep 2026)
+
+- New `warning` diagnostic emitted by `$clientDefaultValue` via an `onTargetFinish` return in `src/decorators.ts`. Fires when the value type passed to `@clientDefaultValue` doesn't match the target property/parameter type (string default on numeric prop, numeric on string, boolean on numeric/string, etc.). Numeric subtypes (`float32`, `int64`) accept numeric literals.
+- When `@alternateType` is present (and not an external type), validation runs against the alternate type instead, so a string default is valid on a numeric prop whose client-facing type is `string`.
+- Message in `src/lib.ts`; long-form doc in `src/diagnostics/client-default-value-type-mismatch.md`. `valueType` label is "numeric" for numbers, otherwise the JS `typeof`.
+- Documented in howto 08types.mdx under a new "Value Type Validation" subsection of `@clientDefaultValue` (prose + typespec-only snippets, not a `<ClientTabs>` block — no emitter code to show). Validation-only — no Spector spec needed.
+
+## csharp-model-suffix & csharp-use-standard-acronyms Linter Rules (Sep 2026)
+
+- Two new C# linter rules added to `src/linter.ts` (both in `rules` and `csharpRules`): `csharp-model-suffix` (Config over Options, Content over Request, Result over Response; respects `@clientName`) and `csharp-use-standard-acronyms` (standard acronym casing). Rule docs live in `src/rules/<name>.md`.
+- `reference/linter.md` already lists both rows at checkout (generated). Do NOT re-add. `codefix-helpers.ts` was generalized from `Model | ModelProperty` to `Type` (now handles `UnionVariant`) using `getTypeName`.
+- Linter rules need no Spector coverage.
