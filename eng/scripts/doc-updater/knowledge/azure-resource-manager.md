@@ -124,3 +124,16 @@ The library provides an experimental **Agent** base type in `lib/base-types/agen
 - How-to guide added: `website/src/content/docs/docs/howtos/ARM/agent-base-type.mdx`.
 - The ARM howtos sidebar is auto-generated from the directory (`current-sidebar.ts` → `autogenerate` on `howtos`), so new how-to files need no manual sidebar registration.
 - Reference docs (`reference/*.md`) for these lib additions were already regenerated in-commit; no `regen-docs` diff was needed for this batch.
+- **Agent base type contract version is `2026-04-01`** (updated from the earlier `2024-06-01`; see `agent.tsp`/`base-types.tsp`/`relationship.tsp` which all use `version: "2026-04-01"`). When writing narrative examples that call `@azureBaseType` directly, use the canonical form `@azureBaseType(#{ baseType: BaseType.Agent, version: "2026-04-01" })` — prefer the `BaseType.Agent`/`BaseType.Relationship` union members over bare `"Agent"` strings (both work since `BaseType` is an extensible union, but the enum form is canonical).
+
+## BaseType Union and Relationship Base Type
+
+`lib/base-types/base-types.tsp` defines an extensible `BaseType` union (`BaseType.Agent`, `BaseType.Relationship`, plus `string`). A second experimental base type, **Relationship**, lives in `lib/base-types/relationship.tsp` (namespace `Azure.ResourceManager.BaseTypes.Relationships`): `Relationship<Properties extends RelationshipProperties>` is an `ExtensionResource` that auto-applies `@azureBaseType(#{ baseType: BaseType.Relationship, version: "2026-04-01" })`. `RelationshipProperties` carries `baseTypes` (read-only, ARM-managed), `sourceId`, `sourceTenant`, `targetId`, `targetTenant`, and read-only `provisioningState`. Lint rule: `use-relationship-required-properties`. It is experimental (emits `basetypes-experimental`) — do not add a dedicated how-to guide until it stabilizes.
+
+## Common Types v6 — BillingData
+
+`lib/common-types/billing-data.tsp` adds a `BillingData` common type for ARM common-types v6. `add-common-types.md` already covers the `Versions.v6` selection workflow generically; no per-type narrative doc is needed.
+
+## arm-resource-operation Rule Split
+
+The old `arm-resource-operation` lint rule was split into three focused rules: `use-api-version`, `use-interface`, and `use-operation-decorator`. Narrative docs (`arm-rules.md`, `rpc-guidelines-coverage.md`) already reference the three new names. `arm-resource-operation-response` is a separate, still-existing rule — do not confuse it with the removed `arm-resource-operation`.
