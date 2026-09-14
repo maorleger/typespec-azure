@@ -292,3 +292,25 @@ namespace (@clientNamespace), naming (@clientName), overload, structure (@client
 ## Diagnostic Messages Externalized (July 2026)
 
 - Diagnostic message definitions were moved out of `src/lib.ts` into individual `src/diagnostics/<name>.md` files (loaded at build). Purely an authoring refactor; reference docs regenerate the same content. No user-facing doc action.
+
+## SdkBuiltInType.wireType + expanded @encode (Sept 2026)
+
+- `SdkBuiltInType` gained `wireType?: SdkBuiltInType` (`src/interfaces.ts`). Set by `addEncodeInfo` in `src/types.ts` whenever `@encode(encoding?, encodedAs)` specifies an `encodedAs` type; it holds the built-in type the value is serialized as on the wire.
+- `@encode` with an `encodedAs` type now applies to `string` and `url` built-in types too (previously only integer and boolean). So a `string` can be encoded as `int32`, etc. When an explicit encoding name is given it stays in `encode`; otherwise `encode` falls back to `wireType.kind`.
+- Array `@encode` (e.g. `ArrayEncoding.commaDelimited`) sets `encode` on the array property; the inner `valueType`'s own `encode` stays `undefined`.
+- Documented in guideline.md "Built-in Types" bullet. Emitter type-graph metadata — no Spector spec needed. Tests: `test/types/built-in.test.ts`, `test/types/array.test.ts`.
+
+## client-default-value-type-mismatch diagnostic (Sept 2026)
+
+- New `warning` diagnostic (`src/lib.ts` + `src/diagnostics/client-default-value-type-mismatch.md`). Emitted from `$clientDefaultValue` `onTargetFinish` in `src/decorators.ts` when the value passed to `@Azure.ClientGenerator.Core.Legacy.clientDefaultValue` is not assignable to the property/parameter type. Validates against the `@alternateType` (respecting scope) when present.
+- Value-type label uses "numeric" for numbers; numeric subtypes (float32, int64) accept numeric defaults without warning. Suppressible; suppressed mismatch is still applied to SDKs.
+- Documented in 08types.mdx `@clientDefaultValue` section (added a caution note). No Spector spec — diagnostic behavior covered by `test/decorators/client-default-value.test.ts`.
+
+## New C# linter rules (Sept 2026)
+
+- Two rules added to `src/linter.ts` (in both `all` and `best-practices:csharp` rulesets): `csharp-model-suffix` (prefer Config/Content/Result over Options/Request/Response) and `csharp-use-standard-acronyms` (standard acronym casing). Each has a `<name>.md` under `src/rules/`.
+- `reference/linter.md` already regenerates with both rows — keep consistent, do not hand-edit. `codefix-helpers.ts` was generalized from `Model | ModelProperty` to `Type` to support union-variant targets.
+
+## Validations refactor (Sept 2026)
+
+- Validation logic was moved into `src/validations/` (clients/http/methods/package/types). Purely internal restructuring; no new diagnostics or user-facing behavior — no doc action.
