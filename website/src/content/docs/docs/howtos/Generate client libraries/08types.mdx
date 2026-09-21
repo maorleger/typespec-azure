@@ -673,6 +673,31 @@ model Config {
 </ClientTabItem>
 </ClientTabs>
 
+### Type Validation
+
+The value passed to `@clientDefaultValue` must match the type of the property or parameter it is applied to. If the value type does not match (for example, a string default on a numeric property), TCGC reports a `client-default-value-type-mismatch` warning:
+
+```typespec
+model RequestOptions {
+  // ❌ Warning: string default on a numeric property
+  @Azure.ClientGenerator.Core.Legacy.clientDefaultValue("10")
+  pageSize?: int32;
+}
+```
+
+When [`@alternateType`](#using-alternatetype-to-reference-external-types) is present, the default value is validated against the alternate client-facing type instead of the original type. This lets you keep a default whose type matches the alternate type:
+
+```typespec
+model RequestOptions {
+  // ✅ No warning: the default matches the alternate type (string)
+  @Azure.ClientGenerator.Core.Legacy.clientDefaultValue("10")
+  @Azure.ClientGenerator.Core.alternateType(string)
+  pageSize?: int32;
+}
+```
+
+If a mismatch is intentional, suppress the warning with `#suppress`. The mismatched default value is still applied to the generated SDKs when suppressed.
+
 ## Models
 
 ### Models with additional properties of any type
