@@ -541,9 +541,11 @@ In addition to the resource-specific property bag, a resource may configure on o
 
 Billing Data provides a standard description of resource's billing state, including a reference to a product in the Marketplace Catalog. It is strongly recommended for Resource Providers with prepaid billing (where a customer is charged _before_ the product is provisioned/fulfilled) to utilize this pattern, allowing customers to interact with such resources through central experiences.
 
+Unlike the other standard features in this section, `BillingDataProperty` is spread into the resource-specific property bag rather than the resource envelope. The `billingData` property is available starting with common-types version `v6`.
+
 ```typespec
-model Employee is TrackedResource<EmployeeProperties> {
-  ...ResourceNameParameter<Employee>;
+model EmployeeProperties {
+  ...DefaultProvisioningStateProperty;
   ...BillingDataProperty;
 }
 ```

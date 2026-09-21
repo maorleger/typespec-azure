@@ -124,3 +124,22 @@ The library provides an experimental **Agent** base type in `lib/base-types/agen
 - How-to guide added: `website/src/content/docs/docs/howtos/ARM/agent-base-type.mdx`.
 - The ARM howtos sidebar is auto-generated from the directory (`current-sidebar.ts` → `autogenerate` on `howtos`), so new how-to files need no manual sidebar registration.
 - Reference docs (`reference/*.md`) for these lib additions were already regenerated in-commit; no `regen-docs` diff was needed for this batch.
+
+## Relationship Base Type (Experimental)
+
+The library provides an experimental **Relationship** base type in `lib/base-types/relationship.tsp` (namespace `Azure.ResourceManager.BaseTypes.Relationships`). Key facts:
+
+- `Relationship<Properties extends RelationshipProperties>` is an `ExtensionResource` template that applies `@azureBaseType(#{ baseType: BaseType.Relationship, version: "2026-04-01" })` automatically. Like the Agent base type, it emits `basetypes-experimental`, so user specs must `#suppress`.
+- `RelationshipProperties<ProvisioningState extends string = ResourceProvisioningState>` is the required property bag: `baseTypes` (read-only), `sourceId`, `sourceTenant`, `targetId`, `targetTenant`, and read-only optional `provisioningState`.
+- The `use-relationship-required-properties` rule enforces that a Relationship-conforming resource is an extension resource with the required Relationship schema. Deriving from `RelationshipProperties` satisfies it.
+- Relationship resources are extension resources, so operations use the `Extension.*` templates (`Extension.Read`, `Extension.CreateOrReplaceAsync`, `Extension.CustomPatchAsync`, `Extension.DeleteWithoutOkAsync`, `Extension.ListByTarget`) against an `Extension.ScopeParameter`.
+- Canonical sample: `packages/samples/specs/resource-manager/resource-types/relationship/main.tsp`.
+- How-to guide added: `website/src/content/docs/docs/howtos/ARM/relationship-base-type.mdx`.
+
+## `@azureBaseType` Value Syntax
+
+`@azureBaseType` takes a `BaseTypeInfo` value: `#{ baseType: BaseType.<Name>, version: "<schema-version>" }`. `baseType` MUST be a `BaseType` enum member (e.g. `BaseType.Agent`, `BaseType.Relationship`) — NOT a bare string. The `version` is the base-type SCHEMA version (currently `"2026-04-01"`), which is distinct from the service `@armCommonTypesVersion` / API version (e.g. `2024-06-01` in samples). Do not conflate the two in examples.
+
+## Billing Data Common Type
+
+`BillingDataProperty` (from `lib/common-types/billing-data.tsp`) is a **property-bag** spread — spread it into the resource's `*Properties` model, NOT into the resource envelope, even though it lives near envelope-property docs. It requires ARM common-types `v6`. Canonical sample: `packages/samples/specs/resource-manager/resource-common-properties/billing-data/main.tsp`.

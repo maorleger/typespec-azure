@@ -1,0 +1,87 @@
+---
+title: Relationship Base Type
+description: Defining ARM Relationship resources as extension resources
+---
+
+:::caution
+The Relationship base type is **experimental**. Its shape may change in future versions of the
+`@azure-tools/typespec-azure-resource-manager` library. Applying `@azureBaseType` (directly or
+through the `Relationship` template) in a provider namespace emits the `basetypes-experimental`
+warning, which you must explicitly suppress while the feature is experimental.
+:::
+
+A _Relationship_ is an ARM base type: a structured contract that describes a directed relationship
+between a source scope and a target entity. The library provides the `Relationship` extension-resource
+template and the `RelationshipProperties` property model. These live in the
+`Azure.ResourceManager.BaseTypes` and `Azure.ResourceManager.BaseTypes.Relationships` namespaces.
+
+```typespec
+using Azure.ResourceManager.BaseTypes.Relationships;
+```
+
+## Required schema
+
+The `use-relationship-required-properties` linting rule enforces that any resource conforming to the
+Relationship base type is an **extension resource** and that its property bag includes the required
+relationship properties. Deriving your properties model from `RelationshipProperties` provides them:
+
+- `sourceId` / `sourceTenant` — the relationship source identifier and its tenant.
+- `targetId` / `targetTenant` — the relationship target identifier and its tenant.
+- `provisioningState` — the (read-only) provisioning state. Override the values with the
+  `ProvisioningState` template parameter.
+
+```typespec
+model DependencyOfProperties
+  is RelationshipProperties<ProvisioningState = DependencyOfProvisioningState> {
+  /** Metadata describing the relationship source and target types. */
+  metadata: DependencyOfMetadata;
+
+  /** Information about the origin of the relationship. */
+  originInformation?: DependencyOfOriginInformation;
+}
+```
+
+## Defining the resource
+
+Use the `Relationship` template, which applies the `@azureBaseType` decorator for the Relationship
+base type and models the resource as an `ExtensionResource`. Add the usual `ResourceNameParameter`
+spread:
+
+```typespec
+#suppress "@azure-tools/typespec-azure-resource-manager/basetypes-experimental" "Experimental BaseTypes"
+model DependencyOf is Relationship<DependencyOfProperties> {
+  ...ResourceNameParameter<
+    Resource = DependencyOf,
+    KeyName = "relationshipName",
+    SegmentName = "dependencyOf",
+    NamePattern = "^[a-zA-Z0-9_.-]{1,64}$"
+  >;
+}
+```
+
+## Defining operations
+
+Because relationships are extension resources, define their operations with the `Extension.*`
+operation templates against a scope parameter:
+
+```typespec
+interface DependencyOfOps<Scope extends Azure.ResourceManager.Foundations.SimpleResource> {
+  get is Extension.Read<Scope, DependencyOf>;
+  create is Extension.CreateOrReplaceAsync<Scope, DependencyOf>;
+  update is Extension.CustomPatchAsync<
+    Scope,
+    DependencyOf,
+    Azure.ResourceManager.Foundations.ResourceUpdateModel<DependencyOf, DependencyOfProperties>
+  >;
+  delete is Extension.DeleteWithoutOkAsync<Scope, DependencyOf>;
+  list is Extension.ListByTarget<Scope, DependencyOf>;
+}
+
+@armResourceOperations
+interface DependencyOfRelationships extends DependencyOfOps<Extension.ScopeParameter> {}
+```
+
+## Complete example
+
+For a full working specification, see the
+[Relationship sample](https://github.com/Azure/typespec-azure/tree/main/packages/samples/specs/resource-manager/resource-types/relationship).
