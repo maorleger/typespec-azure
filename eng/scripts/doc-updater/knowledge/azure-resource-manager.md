@@ -124,3 +124,14 @@ The library provides an experimental **Agent** base type in `lib/base-types/agen
 - How-to guide added: `website/src/content/docs/docs/howtos/ARM/agent-base-type.mdx`.
 - The ARM howtos sidebar is auto-generated from the directory (`current-sidebar.ts` → `autogenerate` on `howtos`), so new how-to files need no manual sidebar registration.
 - Reference docs (`reference/*.md`) for these lib additions were already regenerated in-commit; no `regen-docs` diff was needed for this batch.
+
+## Base Type Versions (Agent / Relationship)
+
+The `@azureBaseType` `BaseTypeInfo.version` for both the `Agent` and `Relationship`
+base types is `2026-04-01` (defined in `lib/base-types/agent.tsp`,
+`lib/base-types/relationship.tsp`, and the example in `lib/base-types/base-types.tsp`).
+This base-type `version` is distinct from a service's `@versioned` API version
+(e.g. the agent sample's `Versions` enum still uses `2024-06-01` for its API version).
+When this base-type version bumps in `lib/`, update the direct `@azureBaseType`
+example in `website/src/content/docs/docs/howtos/ARM/agent-base-type.mdx` to match;
+the reference `decorators.md` is auto-generated from the `.tsp` doc comment.
