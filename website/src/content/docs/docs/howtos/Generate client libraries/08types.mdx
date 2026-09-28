@@ -673,6 +673,20 @@ model Config {
 </ClientTabItem>
 </ClientTabs>
 
+### Default Value Type Validation
+
+The type of the value passed to `@clientDefaultValue` must match the type of the property or parameter it targets. For example, a string default on a numeric property (or vice versa) produces the `client-default-value-type-mismatch` warning.
+
+:::caution
+Applying a default value whose type does not match the target type emits a warning:
+
+```text
+Client default value type "string" does not match property type "int32". The default value type should match the property type.
+```
+
+Use a value of the matching type (e.g. `@clientDefaultValue(10)` for an `int32` property). When `@alternateType` is present, the default value is validated against the alternate type instead, so you can also change the client-facing type to match the default. If the mismatch is intentional, suppress the diagnostic — the mismatched default is still applied to generated SDKs.
+:::
+
 ## Models
 
 ### Models with additional properties of any type

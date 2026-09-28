@@ -292,3 +292,22 @@ namespace (@clientNamespace), naming (@clientName), overload, structure (@client
 ## Diagnostic Messages Externalized (July 2026)
 
 - Diagnostic message definitions were moved out of `src/lib.ts` into individual `src/diagnostics/<name>.md` files (loaded at build). Purely an authoring refactor; reference docs regenerate the same content. No user-facing doc action.
+
+## client-default-value-type-mismatch Diagnostic (September 2026)
+
+- New `warning` diagnostic added in `src/lib.ts` (message in `src/diagnostics/client-default-value-type-mismatch.md`). Fired from `$clientDefaultValue`'s `onTargetFinish` in `src/decorators.ts`: it builds a literal from the value and checks `isAssignableTo` against the property type — or the `@alternateType` type when one is set (respecting scope). Value-type label uses "numeric" for numbers.
+- Numeric subtypes are fine (e.g. `int64`/`float32` accept numeric literals); only cross-category mismatches (string↔numeric↔boolean) warn. Suppressing keeps the (mismatched) default in generated SDKs.
+- Documented as a `:::caution` "Default Value Type Validation" subsection in `08types.mdx` under "Client Default Values (Legacy)". No Spector coverage (diagnostic/error condition).
+
+## csharp-model-suffix + csharp-use-standard-acronyms Linter Rules (September 2026)
+
+- Two new C# `warning` rules added to BOTH the `rules` and `csharpRules` arrays in `src/linter.ts`:
+  - `csharp-model-suffix`: flags C#-resolved model names ending in `Options`→`Config` (except client options), `Request`→`Content`, `Response`→`Result`. Codefix writes `@@clientName(Model, "<suggestion>", "csharp")` to `client.tsp`.
+  - `csharp-use-standard-acronyms`: flags C#-resolved names (models, enums, model properties) with non-standard acronym casing; initial coverage `IP`, `DB`, `OS` (e.g. `IpAddress`→`IPAddress`, `CosmosDb`→`CosmosDB`).
+  - Both use `getLibraryName(tcgcContext, target, "csharp")`, so they respect `@clientName` overrides.
+- The source PR already added the `reference/linter.md` table rows and the `src/rules/<name>.md` doc sources. Note: the website has NO `rules/<name>.md` per-rule pages for any rule (the `reference/linter.md` links to `../rules/*.md` are the established, pre-existing state) — do not create them.
+
+## @operationGroup Explicitly Deprecated (September 2026)
+
+- `lib/decorators.tsp` doc comment reworded: `@operationGroup` is deprecated — use `@client` instead. The source PR already regenerated `reference/decorators.md` (shows "Deprecated: use `@client` instead."), so no `regen-docs` needed.
+- Updated `03client.mdx` "One Client and Two Sub Clients": replaced the "which is an alias" phrasing with a `:::caution` noting `@operationGroup` is deprecated in favor of `@client`.
